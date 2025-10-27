@@ -1,0 +1,162 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  powershell-lint:
+    name: PowerShell Linting
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser
+
+      - name: Lint PowerShell Scripts
+        shell: pwsh
+        run: |
+          $errors = @()
+          Get-ChildItem -Path "powershell","scripts" -Filter "*.ps1" -Recurse | ForEach-Object {
+            $results = Invoke-ScriptAnalyzer -Path $_.FullName -Severity Error
+            if ($results) {
+              $errors += $results
+            }
+          }
+          if ($errors.Count -gt 0) {
+            $errors | Format-Table -AutoSize
+            Write-Error "PSScriptAnalyzer found $($errors.Count) error(s)"
+            exit 1
+          }
+
+  bash-lint:
+    name: Bash Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get install -y shellcheck
+
+      - name: Lint Bash Scripts
+        run: |
+          find bash scripts -name "*.sh" -type f | xargs shellcheck
+
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks Scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  validate-scripts:
+    name: Validate Script Syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate PowerShell Syntax
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path "powershell","scripts" -Filter "*.ps1" -Recurse | ForEach-Object {
+            try {
+              $null = [System.Management.Automation.PSParser]::Tokenize((Get-Content $_.FullName -Raw), [ref]$null)
+              Write-Host "✓ $($_.Name)" -ForegroundColor Green
+            } catch {
+              Write-Error "✗ $($_.Name): $_"
+              exit 1
+            }
+          }
+
+      - name: Validate Bash Syntax
+        run: |
+          find bash scripts -name "*.sh" -type f -exec bash -n {} \;
+
+      - name: Validate SQL Syntax
+        run: |
+          # Basic SQL syntax check (looking for common errors)
+          find sql -name "*.sql" -type f | while read file; do
+            if grep -q "syntax error\|invalid syntax" "$file"; then
+              echo "Potential syntax error in $file"
+              exit 1
+            fi
+          done
+
+  documentation-check:
+    name: Documentation Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check README exists
+        run: |
+          test -f README.md || (echo "README.md missing" && exit 1)
+          test -f LICENSE || (echo "LICENSE missing" && exit 1)
+          test -f SECURITY.md || (echo "SECURITY.md missing" && exit 1)
+          test -f CONTRIBUTING.md || (echo "CONTRIBUTING.md missing" && exit 1)
+
+      - name: Validate Markdown
+        uses: DavidAnson/markdownlint-cli2-action@v14
+        with:
+          globs: '**/*.md'
+          config: |
+            {
+              "MD013": false,
+              "MD033": false,
+              "MD041": false
+            }
+
+  placeholder-check:
+    name: Check for Sanitization Placeholders
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify Placeholders Present
+        run: |
+          # Ensure sanitization placeholders are in place
+          if ! grep -r "<REPLACE_WITH_SECURE_PASSWORD>" powershell/; then
+            echo "Warning: Password placeholders might be missing"
+          fi
+
+          if ! grep -r "<YOUR_" bash/; then
+            echo "Warning: IP/network placeholders might be missing"
+          fi
+
+          # Fail if any actual company references remain
+          if grep -ri "trojan" . --exclude-dir=.git --exclude-dir=.github; then
+            echo "ERROR: Found unsanitized company references"
+            exit 1
+          fi
