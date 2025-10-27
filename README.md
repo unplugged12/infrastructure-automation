@@ -43,13 +43,6 @@ This repository contains **35+ production-tested scripts** demonstrating enterpr
 4. ✅ **Review and test in non-production** environment first
 5. ✅ **Understand what each script does** before execution
 
-### What Was Sanitized
-
-- 🔴 **Hardcoded passwords** → Replaced with `<REPLACE_WITH_SECURE_PASSWORD>`
-- 🔴 **Company domains** → Generic `company.local` and `company.com`
-- 🔴 **Internal IP addresses** → Placeholders like `<YOUR_ADMIN_IP>`
-- ✅ **Public/localhost IPs** → Preserved (127.0.0.1, 8.8.8.8, 0.0.0.0)
-
 ---
 
 ## 📁 Repository Structure
@@ -158,7 +151,7 @@ sudo ./bash/security/harden_ubuntu24.sh
 
 ---
 
-## 💼 Skills Demonstrated
+## Skills Showcase
 
 ### Technical Leadership
 
