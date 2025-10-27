@@ -1,0 +1,66 @@
+# Secrets and Credentials
+*.credentials
+*.secrets
+*.env
+*.key
+*.pem
+*.pfx
+*.p12
+config.local.*
+
+# Sensitive Configuration
+appsettings.local.json
+appsettings.*.local.json
+connectionstrings.config
+
+# PowerShell Sensitive
+*-credentials.ps1
+*-secrets.ps1
+*.encrypted.txt
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Backup Files
+*.bak
+*.backup
+*.old
+
+# Temporary Files
+temp/
+tmp/
+*.tmp
+
+# PowerShell Artifacts
+*.ps1xml
+*-help.xml
+
+# Test Results
+TestResults/
+*.trx
+
+# Documentation Builds
+_site/
+.jekyll-cache/
+
+# Security Scan Results
+*.sarif
+trivy-results.json
+semgrep-results.json
+
+# Baseline Files (keep warning baselines in repo)
+!.pssa-warning-baseline.json
