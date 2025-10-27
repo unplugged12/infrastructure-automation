@@ -78,7 +78,7 @@
     Username for SMTP authentication (if required).
 
 .PARAMETER SmtpPassword
-    Password for SMTP authentication (if required). Consider using secure string.
+    SecureString password for SMTP authentication (if required). Prompt with Read-Host -AsSecureString or supply a secret.
 
 .PARAMETER LogPath
     Path where log files will be stored. Logs are rotated automatically when exceeding 10MB.
@@ -104,7 +104,7 @@
 .EXAMPLE
     .\Backup-SystemFiles.ps1 -Path "C:\Database\Config" -Destination "D:\Backups" -EmailNotification `
         -EmailTo "admin@company.com" -EmailFrom "backup@company.com" -SmtpServer "smtp.office365.com" `
-        -SmtpUsername "backup@company.com" -SmtpPassword "SecurePassword123"
+        -SmtpUsername "backup@company.com" -SmtpPassword (Read-Host "Enter SMTP password" -AsSecureString)
 
     Full backup with email notification sent on completion or failure.
 
@@ -211,7 +211,7 @@ param(
     [string]$SmtpUsername,
 
     [Parameter(Mandatory = $false)]
-    [string]$SmtpPassword,
+    [System.Security.SecureString]$SmtpPassword,
 
     [Parameter(Mandatory = $false)]
     [string]$LogPath = "$env:TEMP\Backup-SystemFiles.log",
@@ -421,10 +421,8 @@ This is an automated message from Backup-SystemFiles.ps1 v$ScriptVersion
         }
 
         # Add credentials if provided
-        if (-not [string]::IsNullOrWhiteSpace($SmtpUsername) -and
-            -not [string]::IsNullOrWhiteSpace($SmtpPassword)) {
-            $securePassword = ConvertTo-SecureString $SmtpPassword -AsPlainText -Force
-            $credential = New-Object System.Management.Automation.PSCredential($SmtpUsername, $securePassword)
+        if (-not [string]::IsNullOrWhiteSpace($SmtpUsername) -and $SmtpPassword) {
+            $credential = New-Object System.Management.Automation.PSCredential($SmtpUsername, $SmtpPassword)
             $mailParams.Credential = $credential
             $mailParams.UseSsl = $true
         }
@@ -710,3 +708,4 @@ catch {
 }
 
 #endregion
+

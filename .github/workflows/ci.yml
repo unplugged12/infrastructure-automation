@@ -51,11 +51,14 @@ jobs:
   security-scan:
     name: Security Scanning
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - uses: actions/checkout@v4
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.33.1
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -131,12 +134,7 @@ jobs:
         uses: DavidAnson/markdownlint-cli2-action@v14
         with:
           globs: '**/*.md'
-          config: |
-            {
-              "MD013": false,
-              "MD033": false,
-              "MD041": false
-            }
+          config: .github/markdownlint-cli2.jsonc
 
   placeholder-check:
     name: Check for Sanitization Placeholders

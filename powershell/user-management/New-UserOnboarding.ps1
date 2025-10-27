@@ -69,7 +69,7 @@
     - Global Administrator role for comprehensive operations
 
     Security Considerations:
-    - ⚠️ Creates accounts with default password "<REPLACE_WITH_SECURE_PASSWORD>" (MUST be changed on first logon)
+    - ⚠️ Prompts operator for a secure temporary password (must be changed on first logon)
     - ⚠️ Assigns Microsoft 365 licenses (potential cost implications)
     - ⚠️ Adds users to groups (potential privilege escalation)
     - ⚠️ Connects to multiple cloud services (authentication required)
@@ -103,11 +103,16 @@ param(
     
     [Parameter(Mandatory=$false)]
     [ValidatePattern("^(OU|CN)=.+,DC=.+")]
-    [string]$OrganizationalUnit = "OU=EB Remote CS,OU=Service,OU=Users by Departments,DC=company,DC=local"  # Update this path, but should be determined automatically if not specified
+    [string]$OrganizationalUnit = "OU=EB Remote CS,OU=Service,OU=Users by Departments,DC=company,DC=local",
+    [Parameter(Mandatory=$false)]
+    [System.Security.SecureString]
+    $DefaultPasswordSecure
 )
 
 # Configuration
-$DefaultPassword = "<REPLACE_WITH_SECURE_PASSWORD>"
+if (-not $DefaultPasswordSecure) {
+    $DefaultPasswordSecure = Read-Host "Enter the temporary password to assign" -AsSecureString
+}
 $Domain = "@company.com"
 $LicenseSku = "SPB"  # Microsoft 365 Business Premium SKU
 
@@ -765,7 +770,7 @@ function New-ADEmployee {
         if ($UseADModule) {
             # Use AD PowerShell module
             Import-Module ActiveDirectory -ErrorAction Stop
-            $SecurePassword = ConvertTo-SecureString $DefaultPassword -AsPlainText -Force
+            $SecurePassword = $DefaultPasswordSecure
 
             # Check if user already exists before creating
             $existingUser = Get-ADUser -Filter "SamAccountName -eq '$Username'" -ErrorAction SilentlyContinue
@@ -815,7 +820,9 @@ function New-ADEmployee {
                 $user.SetInfo()
                 
                 # Set password
-                $user.SetPassword($DefaultPassword)
+                $plainPassword = (New-Object System.Net.NetworkCredential('', $DefaultPasswordSecure)).Password
+                $user.SetPassword($plainPassword)
+                $plainPassword = $null
                 $user.Put("pwdLastSet", 0)  # Force password change at next logon
                 
                 # Enable account
@@ -1422,7 +1429,7 @@ try {
     Write-Host "  Name: $DisplayName"
     Write-Host "  Username: $Username"
     Write-Host "  Email: $EmailAddress"
-    Write-Host "  Default Password: $DefaultPassword"
+    Write-Host "  Default Password: (captured securely during execution)"
     Write-Host "  Department: $Department"
     Write-Host "  Location: $EmployeeLocation"
     $supervisorSummary = if ($Script:SupervisorUpn) { $Script:SupervisorUpn } else { "Not configured" }
@@ -1493,5 +1500,4 @@ finally {
         Write-Host "Note: Some disconnect operations may have failed (this is usually harmless)" -ForegroundColor Gray
     }
 }
-
 

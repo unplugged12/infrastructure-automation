@@ -42,7 +42,7 @@
     - Available M365 Business Premium licenses
 
     Security Considerations:
-    - ⚠️ Creates accounts with default password "<REPLACE_WITH_SECURE_PASSWORD>"
+    - ⚠️ Prompts operator for the initial password (never stored in code)
     - ⚠️ Assigns M365 licenses (cost implications)
     - ⚠️ Adds users to groups including VPN Users and RemoteUsers
     - ⚠️ Requires Azure AD admin credentials
@@ -52,7 +52,7 @@
     - ✅ Approval: Verify user authorization before running
 
     Default Configuration:
-    - Password: <REPLACE_WITH_SECURE_PASSWORD> (must change at first logon)
+    - Password: Prompted securely at runtime (must change at first logon)
     - Domain: company.com / company.local
     - OU: OU=Employees,DC=company,DC=local
     - AD Groups: APU, Credit, Employees, RemoteUsers, Service-1, VPN Users
@@ -84,7 +84,7 @@ $Username = "$FirstName$LastInitial"
 $EmailAddress = "$($Username)@company.com"
 
 # Set temporary password
-$TemporaryPassword = "<REPLACE_WITH_SECURE_PASSWORD>"
+$TemporaryPassword = Read-Host "Enter the temporary password to assign" -AsSecureString
 
 # Specify AD domain and OU
 $Domain = "company.local"
@@ -97,7 +97,7 @@ New-ADUser -Name $Username `
            -SamAccountName $Username `
            -UserPrincipalName "$Username@$Domain" `
            -EmailAddress $EmailAddress `
-           -AccountPassword (ConvertTo-SecureString $TemporaryPassword -AsPlainText -Force) `
+           -AccountPassword $TemporaryPassword `
            -PasswordNeverExpires $false `
            -ChangePasswordAtLogon $true `
            -Enabled $true `
@@ -125,3 +125,4 @@ $LicenseSku = Get-AzureADSubscribedSku | Where-Object {$_.SkuPartNumber -eq "SMB
 Set-AzureADUserLicense -ObjectId $AzureADUser.ObjectId -AddLicenses @{"SkuId" = $LicenseSku.SkuId}
 
 Write-Host "User $Username has been successfully onboarded."
+
