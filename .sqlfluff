@@ -1,0 +1,6 @@
+[sqlfluff]
+dialect = tsql
+exclude_rules = L031
+
+[layout]
+tab_space_size = 4
