@@ -556,7 +556,7 @@ install_screenconnect() {
 
     log "INFO" "Installing ScreenConnect agent..."
 
-    local sc_url="https://support.trojanonline.com/Bin/ScreenConnect.ClientSetup.deb?e=Access&y=Guest"
+    local sc_url="https://support.company.com/Bin/ScreenConnect.ClientSetup.deb?e=Access&y=Guest"
     local sc_file="/tmp/screenconnect_client.deb"
 
     # Download with error checking
@@ -624,7 +624,7 @@ install_atera() {
 
     log "INFO" "Installing Atera agent..."
 
-    local atera_url='https://TrojanProfessionalServicesInc289169.servicedesk.atera.com/api/utils/AgentInstallScript/Linux/0013z00002Shig1AAB?customerId=2'
+    local atera_url='https://CompanyProfessionalServicesInc289169.servicedesk.atera.com/api/utils/AgentInstallScript/Linux/0013z00002Shig1AAB?customerId=2'
     local atera_script="/tmp/atera_install.sh"
 
     # Download Atera install script

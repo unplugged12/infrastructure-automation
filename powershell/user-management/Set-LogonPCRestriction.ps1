@@ -44,8 +44,8 @@
     - ✅ Support: Inform helpdesk of restrictions for troubleshooting
 
     Current Configuration:
-    - User OU: OU=Eligibility,OU='Users by Departments',DC=trojanonline,DC=local
-    - Computer OU: OU=Service,OU='Office Computers',DC=trojanonline,DC=local
+    - User OU: OU=Eligibility,OU='Users by Departments',DC=company,DC=local
+    - Computer OU: OU=Service,OU='Office Computers',DC=company,DC=local
 
     Important Notes:
     - Users can ONLY log on to computers in the specified computer OU
@@ -64,8 +64,8 @@
 #>
 
 # Define variables for the OUs
-$userOU = "OU=Eligibility,OU='Users by Departments',DC=trojanonline,DC=local"
-$computerOU = "OU=Service,OU='Office Computers',DC=trojanonline,DC=local"
+$userOU = "OU=Eligibility,OU='Users by Departments',DC=company,DC=local"
+$computerOU = "OU=Service,OU='Office Computers',DC=company,DC=local"
 
 # Get the DistinguishedNames of the computers in the specified computer OU
 $computers = Get-ADComputer -Filter * -SearchBase $computerOU | Select-Object -ExpandProperty DistinguishedName

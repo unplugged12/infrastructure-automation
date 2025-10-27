@@ -129,11 +129,11 @@ set -euo pipefail
 # Configuration - CUSTOMIZE THESE BEFORE RUNNING
 ###############################################################################
 
-ADMIN_V4="172.16.2.60/32"
+ADMIN_V4="<YOUR_ADMIN_IP>/32  # Replace with your admin workstation IP"
 ADMIN_V6=""  # leave empty if unused
-INTERNAL_V4="172.16.1.0/24"
+INTERNAL_V4="<YOUR_INTERNAL_NETWORK>/24  # Replace with your internal network range"
 INTERNAL_V6=""
-SIP_TRUST_V4="172.16.1.0/24"
+SIP_TRUST_V4="<YOUR_INTERNAL_NETWORK>/24  # Replace with your internal network range"
 SIP_TRUST_V6=""
 
 ###############################################################################

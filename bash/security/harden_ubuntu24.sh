@@ -126,7 +126,7 @@ EOF
 
 
 # 9. Install ScreenConnect agent
-SC_DEB_URL="https://support.trojanonline.com/Bin/ScreenConnect.ClientSetup.deb?e=Access&y=Guest"
+SC_DEB_URL="https://support.company.com/Bin/ScreenConnect.ClientSetup.deb?e=Access&y=Guest"
 SC_DEB_FILE="/tmp/screenconnect_client.deb"
 wget -O "$SC_DEB_FILE" "$SC_DEB_URL"
 apt install -y "$SC_DEB_FILE"
@@ -145,7 +145,7 @@ fi
 
 
 # 11. Install Atera agent
-ATERA_CMD='sudo wget -O - "https://TrojanProfessionalServicesInc289169.servicedesk.atera.com/api/utils/AgentInstallScript/Linux/0013z00002Shig1AAB?customerId=2" | sudo bash'
+ATERA_CMD='sudo wget -O - "https://CompanyProfessionalServicesInc289169.servicedesk.atera.com/api/utils/AgentInstallScript/Linux/0013z00002Shig1AAB?customerId=2" | sudo bash'
 eval "$ATERA_CMD"
 
 echo "Hardening complete.  Please review output and adjust any manual steps (e.g., configure centralized logging server)."

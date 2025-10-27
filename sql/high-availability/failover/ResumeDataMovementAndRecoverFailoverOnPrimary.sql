@@ -50,7 +50,7 @@
  *   Affected Databases (16):
  *     Archive, Chariot, Chariot_datawarehouse, Chariottest, ChariotTraining,
  *     Cust, Docs, Eupdate, obr, obrtest, obrtraining, Trantemp,
- *     TrojanBudget, TrojanTransfer, trojantransfertest, TrojanTransferTraining
+ *     CompanyBudget, CompanyTransfer, companytransfertest, CompanyTransferTraining
  *
  *   Affected Availability Groups (16):
  *     Corresponding *_bag AGs for each database listed above
@@ -247,14 +247,14 @@ ALTER AVAILABILITY GROUP [obrtraining_bag] FORCE_FAILOVER_ALLOW_DATA_LOSS
 ALTER DATABASE [Trantemp] SET HADR RESUME
 ALTER AVAILABILITY GROUP [Trantemp_bag] FORCE_FAILOVER_ALLOW_DATA_LOSS
 
-ALTER DATABASE [TrojanBudget] SET HADR RESUME
-ALTER AVAILABILITY GROUP [TrojanBudget_bag] FORCE_FAILOVER_ALLOW_DATA_LOSS
+ALTER DATABASE [CompanyBudget] SET HADR RESUME
+ALTER AVAILABILITY GROUP [CompanyBudget_bag] FORCE_FAILOVER_ALLOW_DATA_LOSS
 
-ALTER DATABASE [TrojanTransfer] SET HADR RESUME
-ALTER AVAILABILITY GROUP [TrojanTransfer_bag] FORCE_FAILOVER_ALLOW_DATA_LOSS
+ALTER DATABASE [CompanyTransfer] SET HADR RESUME
+ALTER AVAILABILITY GROUP [CompanyTransfer_bag] FORCE_FAILOVER_ALLOW_DATA_LOSS
 
-ALTER DATABASE [trojantransfertest] SET HADR RESUME
-ALTER AVAILABILITY GROUP [trojantransfertest_bag] FORCE_FAILOVER_ALLOW_DATA_LOSS
+ALTER DATABASE [companytransfertest] SET HADR RESUME
+ALTER AVAILABILITY GROUP [companytransfertest_bag] FORCE_FAILOVER_ALLOW_DATA_LOSS
 
-ALTER DATABASE [TrojanTransferTraining] SET HADR RESUME
-ALTER AVAILABILITY GROUP [TrojanTransferTraining_bag] FORCE_FAILOVER_ALLOW_DATA_LOSS
+ALTER DATABASE [CompanyTransferTraining] SET HADR RESUME
+ALTER AVAILABILITY GROUP [CompanyTransferTraining_bag] FORCE_FAILOVER_ALLOW_DATA_LOSS

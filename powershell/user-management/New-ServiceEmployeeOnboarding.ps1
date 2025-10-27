@@ -42,7 +42,7 @@
     - Available M365 Business Premium licenses
 
     Security Considerations:
-    - ⚠️ Creates accounts with default password "1Japaneseomelet!"
+    - ⚠️ Creates accounts with default password "<REPLACE_WITH_SECURE_PASSWORD>"
     - ⚠️ Assigns M365 licenses (cost implications)
     - ⚠️ Adds users to groups including VPN Users and RemoteUsers
     - ⚠️ Requires Azure AD admin credentials
@@ -52,11 +52,11 @@
     - ✅ Approval: Verify user authorization before running
 
     Default Configuration:
-    - Password: 1Japaneseomelet! (must change at first logon)
-    - Domain: trojanonline.com / trojanonline.local
-    - OU: OU=Employees,DC=trojanonline,DC=local
+    - Password: <REPLACE_WITH_SECURE_PASSWORD> (must change at first logon)
+    - Domain: company.com / company.local
+    - OU: OU=Employees,DC=company,DC=local
     - AD Groups: APU, Credit, Employees, RemoteUsers, Service-1, VPN Users
-    - Email Groups: Trojaneveryone, TrojanService, Trojan Service External, Trojan External
+    - Email Groups: Companyeveryone, CompanyService, Company Service External, Company External
     - License: Microsoft 365 Business Premium (SMB_BUSINESS_PREMIUM)
 
     Change Log:
@@ -81,14 +81,14 @@ $LastName = Read-Host "Enter the user's last name"
 # Generate username and email
 $LastInitial = $LastName.Substring(0,1)
 $Username = "$FirstName$LastInitial"
-$EmailAddress = "$($Username)@trojanonline.com"
+$EmailAddress = "$($Username)@company.com"
 
 # Set temporary password
-$TemporaryPassword = "1Japaneseomelet!"
+$TemporaryPassword = "<REPLACE_WITH_SECURE_PASSWORD>"
 
 # Specify AD domain and OU
-$Domain = "trojanonline.local"
-$OU = "OU=Employees,DC=trojanonline,DC=local"
+$Domain = "company.local"
+$OU = "OU=Employees,DC=company,DC=local"
 
 # Create new AD user
 New-ADUser -Name $Username `
@@ -113,7 +113,7 @@ foreach ($Group in $ADGroups) {
 $AzureADUser = Get-AzureADUser -ObjectId "$EmailAddress"
 
 # Add user to Microsoft 365 email groups
-$EmailGroups = @("Trojaneveryone", "TrojanService", "Trojan Service External", "Trojan External")
+$EmailGroups = @("Companyeveryone", "CompanyService", "Company Service External", "Company External")
 foreach ($Group in $EmailGroups) {
     $GroupObj = Get-AzureADGroup -SearchString $Group
     Add-AzureADGroupMember -ObjectId $GroupObj.ObjectId -RefObjectId $AzureADUser.ObjectId

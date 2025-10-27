@@ -141,7 +141,7 @@ if (!(Test-Path $OutputFile)) {
     Out-File -FilePath $PS7ReportFile -Encoding UTF8
 
 # Get list of computers
-$ComputerList = Get-ADComputer -SearchBase "OU=TestOU,DC=trojanonline,DC=local" -Filter * | Select-Object -ExpandProperty Name
+$ComputerList = Get-ADComputer -SearchBase "OU=TestOU,DC=company,DC=local" -Filter * | Select-Object -ExpandProperty Name
 $TotalComputers = $ComputerList.Count
 Write-Host "Found $TotalComputers computers to process"
 

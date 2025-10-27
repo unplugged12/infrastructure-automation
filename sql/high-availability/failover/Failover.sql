@@ -83,10 +83,10 @@ Availability Groups Affected (16 total):
     10. OBRTest_Bag
     11. OBRTraining_bag
     12. TranTemp_bag
-    13. TrojanBudget_bag
-    14. TrojanTransfer_Bag
-    15. TrojanTransferTest_Bag
-    16. TrojanTransferTraining_Bag
+    13. CompanyBudget_bag
+    14. CompanyTransfer_Bag
+    15. CompanyTransferTest_Bag
+    16. CompanyTransferTraining_Bag
 
 Notes:
     - Script must be run on the SECONDARY replica
@@ -163,8 +163,8 @@ ALTER AVAILABILITY GROUP [OBR_Bag] FAILOVER;
 ALTER AVAILABILITY GROUP [OBRTest_Bag] FAILOVER;
 ALTER AVAILABILITY GROUP [OBRTraining_bag] FAILOVER;
 ALTER AVAILABILITY GROUP [TranTemp_bag] FAILOVER;
-ALTER AVAILABILITY GROUP [TrojanBudget_bag] FAILOVER;
-ALTER AVAILABILITY GROUP [TrojanTransfer_Bag] FAILOVER;
-ALTER AVAILABILITY GROUP [TrojanTransferTest_Bag] FAILOVER;
-ALTER AVAILABILITY GROUP [TrojanTransferTraining_Bag] FAILOVER;
+ALTER AVAILABILITY GROUP [CompanyBudget_bag] FAILOVER;
+ALTER AVAILABILITY GROUP [CompanyTransfer_Bag] FAILOVER;
+ALTER AVAILABILITY GROUP [CompanyTransferTest_Bag] FAILOVER;
+ALTER AVAILABILITY GROUP [CompanyTransferTraining_Bag] FAILOVER;
 GO

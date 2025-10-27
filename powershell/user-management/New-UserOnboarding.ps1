@@ -32,7 +32,7 @@
 .PARAMETER OrganizationalUnit
     Distinguished Name (DN) of the Active Directory Organizational Unit where the user will be created.
     Must match pattern: ^(OU|CN)=.+,DC=.+
-    Optional. Default: "OU=EB Remote CS,OU=Service,OU=Users by Departments,DC=trojanonline,DC=local"
+    Optional. Default: "OU=EB Remote CS,OU=Service,OU=Users by Departments,DC=company,DC=local"
     If not specified, script will attempt to find appropriate OU automatically.
 
 .EXAMPLE
@@ -47,7 +47,7 @@
     Create a new user account for Jane Smith in the IT department with default settings.
 
 .EXAMPLE
-    .\New-UserOnboarding.ps1 -FirstName "Robert" -LastName "Johnson" -Department "Sales" -OrganizationalUnit "OU=Sales,OU=Users,DC=trojanonline,DC=local" -Verbose
+    .\New-UserOnboarding.ps1 -FirstName "Robert" -LastName "Johnson" -Department "Sales" -OrganizationalUnit "OU=Sales,OU=Users,DC=company,DC=local" -Verbose
 
     Create a new user account for Robert Johnson in the Sales department in a specific OU with detailed logging.
 
@@ -69,7 +69,7 @@
     - Global Administrator role for comprehensive operations
 
     Security Considerations:
-    - ⚠️ Creates accounts with default password "1Japaneseomelet!" (MUST be changed on first logon)
+    - ⚠️ Creates accounts with default password "<REPLACE_WITH_SECURE_PASSWORD>" (MUST be changed on first logon)
     - ⚠️ Assigns Microsoft 365 licenses (potential cost implications)
     - ⚠️ Adds users to groups (potential privilege escalation)
     - ⚠️ Connects to multiple cloud services (authentication required)
@@ -103,12 +103,12 @@ param(
     
     [Parameter(Mandatory=$false)]
     [ValidatePattern("^(OU|CN)=.+,DC=.+")]
-    [string]$OrganizationalUnit = "OU=EB Remote CS,OU=Service,OU=Users by Departments,DC=trojanonline,DC=local"  # Update this path, but should be determined automatically if not specified
+    [string]$OrganizationalUnit = "OU=EB Remote CS,OU=Service,OU=Users by Departments,DC=company,DC=local"  # Update this path, but should be determined automatically if not specified
 )
 
 # Configuration
-$DefaultPassword = "1Japaneseomelet!"
-$Domain = "@trojanonline.com"
+$DefaultPassword = "<REPLACE_WITH_SECURE_PASSWORD>"
+$Domain = "@company.com"
 $LicenseSku = "SPB"  # Microsoft 365 Business Premium SKU
 
 # Logging Configuration
@@ -174,34 +174,34 @@ $DepartmentAdGroups = @{
     "Support"    = @("Credit", "Employees", "RemoteUsers", "Softwaresupport", "Support Services", "Support1", "VPN Users")
 }
 
-$BaseDistributionLists = @("trojaneveryone@trojanonline.com")
+$BaseDistributionLists = @("companyeveryone@company.com")
 
 $DepartmentDistributionLists = @{
-    "Service"    = @("Trojan Service", "Trojan Service External")
-    "Sales"      = @("Trojan Service", "Trojan Service External")
-    "IT"         = @("Trojan Service", "Trojan Service External")
-    "Management" = @("Trojan Service", "Trojan Service External")
-    "Support"    = @("softwaresupport@trojanonline.com")
+    "Service"    = @("Company Service", "Company Service External")
+    "Sales"      = @("Company Service", "Company Service External")
+    "IT"         = @("Company Service", "Company Service External")
+    "Management" = @("Company Service", "Company Service External")
+    "Support"    = @("softwaresupport@company.com")
 }
 
 $LocationDistributionLists = @{
-    "Onshore"  = @("trojaninternal@trojanonline.com")
-    "Offshore" = @("trojanexternal@trojanonline.com")
+    "Onshore"  = @("companyinternal@company.com")
+    "Offshore" = @("companyexternal@company.com")
 }
 
 $DepartmentOuMap = @{
     "Service" = @{
-        Default = "OU=EB Remote CS,OU=Service,OU=Users by Departments,DC=trojanonline,DC=local"
+        Default = "OU=EB Remote CS,OU=Service,OU=Users by Departments,DC=company,DC=local"
     }
     "Support" = @{
-        Onshore  = "OU=Software Support,OU=Users by Departments,DC=trojanonline,DC=local"
-        Offshore = "OU=EB Remote_Support_Staff,OU=Software Support,OU=Users by Departments,DC=trojanonline,DC=local"
+        Onshore  = "OU=Software Support,OU=Users by Departments,DC=company,DC=local"
+        Offshore = "OU=EB Remote_Support_Staff,OU=Software Support,OU=Users by Departments,DC=company,DC=local"
     }
 }
 
 $DepartmentSupervisorUpn = @{
-    "Service" = "MelisaB@trojanonline.com"
-    "Support" = "jojoj@trojanonline.com"
+    "Service" = "MelisaB@company.com"
+    "Support" = "jojoj@company.com"
 }
 
 if ($DepartmentSupervisorUpn.ContainsKey($Script:DepartmentCanonical)) {
@@ -566,10 +566,10 @@ function Get-DefaultOU {
         }
 
         $candidateOUs += @(
-            "OU=Users by Departments,DC=trojanonline,DC=local",
-            "OU=Users,DC=trojanonline,DC=local",
-            "CN=Users,DC=trojanonline,DC=local",
-            "OU=Employees,DC=trojanonline,DC=local"
+            "OU=Users by Departments,DC=company,DC=local",
+            "OU=Users,DC=company,DC=local",
+            "CN=Users,DC=company,DC=local",
+            "OU=Employees,DC=company,DC=local"
         )
 
         $candidateOUs = $candidateOUs | Where-Object { $_ } | Select-Object -Unique

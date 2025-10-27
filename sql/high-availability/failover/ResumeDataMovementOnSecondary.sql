@@ -48,7 +48,7 @@
  *   Affected Databases (16):
  *     archive, Chariot, Chariot_datawarehouse, Chariottest, ChariotTraining,
  *     Cust, Docs, Eupdate, obr, obrtest, obrTraining, Trantemp,
- *     TrojanBudget, TrojanTransfer, trojantransfertest, TrojanTransferTraining
+ *     CompanyBudget, CompanyTransfer, companytransfertest, CompanyTransferTraining
  *
  ******************************************************************************
  * PREREQUISITES
@@ -231,7 +231,7 @@ ALTER DATABASE [obr] SET HADR RESUME
 ALTER DATABASE [obrtest] SET HADR RESUME
 ALTER DATABASE [obrTraining] SET HADR RESUME
 ALTER DATABASE [Trantemp] SET HADR RESUME
-ALTER DATABASE [TrojanBudget] SET HADR RESUME
-ALTER DATABASE [TrojanTransfer] SET HADR RESUME
-ALTER DATABASE [trojantransfertest] SET HADR RESUME
-ALTER DATABASE [TrojanTransferTraining] SET HADR RESUME
+ALTER DATABASE [CompanyBudget] SET HADR RESUME
+ALTER DATABASE [CompanyTransfer] SET HADR RESUME
+ALTER DATABASE [companytransfertest] SET HADR RESUME
+ALTER DATABASE [CompanyTransferTraining] SET HADR RESUME

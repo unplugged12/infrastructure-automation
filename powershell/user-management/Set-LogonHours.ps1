@@ -16,7 +16,7 @@
 .EXAMPLE
     .\Set-LogonHours.ps1
 
-    Sets logon hours for all users in OU=TestOU,DC=trojanonline,DC=local to allow access
+    Sets logon hours for all users in OU=TestOU,DC=company,DC=local to allow access
     Monday-Saturday, 5 AM to 6 PM Pacific Time.
 
 .EXAMPLE
@@ -51,7 +51,7 @@
     - Allowed Days: Monday through Saturday
     - Denied: Sunday all day, nights/early mornings
     - Timezone: Pacific Time (UTC-8)
-    - Target OU: OU=TestOU,DC=trojanonline,DC=local
+    - Target OU: OU=TestOU,DC=company,DC=local
 
     Customization:
     Modify the following variables to change behavior:
@@ -120,7 +120,7 @@ $hashTable = @{
 }
 
 # Modify users in the specified OU
-$distinguishedName = "OU=TestOU,DC=trojanonline,DC=local"
+$distinguishedName = "OU=TestOU,DC=company,DC=local"
 $users = Get-ADUser -Filter * -SearchBase $distinguishedName
 
 foreach ($user in $users) {
