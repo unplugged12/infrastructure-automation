@@ -178,7 +178,7 @@ jobs:
           $resultsPath = Join-Path $PWD 'TestResults'
           New-Item -Path $resultsPath -ItemType Directory -Force | Out-Null
 
-          Invoke-Pester -Script $tests.FullName -Output Detailed -CI -OutputFormat NUnitXml -OutFile (Join-Path $resultsPath 'PesterResults.xml')
+          Invoke-Pester -Path $tests.FullName -Output Detailed -CI -OutputFormat NUnitXml -OutFile (Join-Path $resultsPath 'PesterResults.xml')
           if ($LASTEXITCODE -ne 0) {
             exit $LASTEXITCODE
           }
