@@ -169,6 +169,8 @@ jobs:
       - name: Run Pester tests
         shell: pwsh
         run: |
+          Import-Module Pester -MinimumVersion 5.0
+
           $tests = Get-ChildItem -Path powershell -Filter *.Tests.ps1 -Recurse
           if (-not $tests) {
             Write-Host "No Pester test files found. Skipping suite."
@@ -178,12 +180,16 @@ jobs:
           $resultsPath = Join-Path $PWD 'TestResults'
           New-Item -Path $resultsPath -ItemType Directory -Force | Out-Null
 
-          Invoke-Pester -Path $tests.FullName -Output Detailed -CI -Configuration @{
-          Output = @{
-              OutputPath = (Join-Path $resultsPath 'PesterResults.xml')
-              Format = 'NUnitXml'
-              }
-          }
+          $config = New-PesterConfiguration
+          $config.Run.Path = @($tests.FullName)
+          $config.Run.Exit = $true
+          $config.Output.Verbosity = 'Detailed'
+          $config.CI = $true
+          $config.TestResult.Enabled = $true
+          $config.TestResult.OutputPath = Join-Path $resultsPath 'PesterResults.xml'
+          $config.TestResult.OutputFormat = 'NUnitXml'
+
+          Invoke-Pester -Configuration $config
           if ($LASTEXITCODE -ne 0) {
             exit $LASTEXITCODE
           }

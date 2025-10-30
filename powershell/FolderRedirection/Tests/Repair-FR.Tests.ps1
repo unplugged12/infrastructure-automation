@@ -30,9 +30,30 @@ BeforeAll {
             DistinguishedName = "CN=$Sam,OU=Users,DC=test,DC=local"
         }
     }
+
+    if (-not (Get-Command Get-ADUser -ErrorAction SilentlyContinue)) {
+        function Get-ADUser {
+            throw "Get-ADUser is not available in this environment. Tests must mock it."
+        }
+    }
+
+    function Initialize-ADModuleMocks {
+        Mock Get-Module -ParameterFilter { $Name -eq 'ActiveDirectory' -and $ListAvailable } {
+            @([pscustomobject]@{
+                Name = 'ActiveDirectory'
+                Version = [version]'1.0.0.0'
+            })
+        }
+
+        Mock Import-Module -ParameterFilter { $Name -eq 'ActiveDirectory' } { }
+    }
 }
 
 Describe "Repair-FolderRedirectionAfterRename - AD/SID Verification" {
+
+    BeforeEach {
+        Initialize-ADModuleMocks
+    }
 
     Context "Old user missing, new user present (normal rename completed)" {
         It "Should continue with WARN and use new user SID (not ExitCode 11)" {
@@ -53,7 +74,7 @@ Describe "Repair-FolderRedirectionAfterRename - AD/SID Verification" {
             Mock Stop-Transcript { }
 
             # Should not throw and should exit 0
-            $result = & $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'newuser' -WhatIf -VerboseOutput 2>&1
+            $result = & $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'newuser' -WhatIf -VerboseOutput -SkipElevationCheck 2>&1
 
             # Check for warning about old user
             $result | Should -Match "Old user.*not found.*Assuming rename"
@@ -83,7 +104,7 @@ Describe "Repair-FolderRedirectionAfterRename - AD/SID Verification" {
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'newuser' -WhatIf -VerboseOutput 2>&1
+            $result = & $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'newuser' -WhatIf -VerboseOutput -SkipElevationCheck 2>&1
 
             $result | Should -Match "SID verification passed"
             $LASTEXITCODE | Should -Be 0
@@ -102,7 +123,7 @@ Describe "Repair-FolderRedirectionAfterRename - AD/SID Verification" {
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\test\share' -OldSam 'user1' -NewSam 'user2' -VerboseOutput 2>&1
+            $result = & $script:ScriptPath -RootPath '\\test\share' -OldSam 'user1' -NewSam 'user2' -VerboseOutput -SkipElevationCheck 2>&1
 
             $result | Should -Match "SID MISMATCH"
             $result | Should -Match "not a simple rename"
@@ -119,7 +140,7 @@ Describe "Repair-FolderRedirectionAfterRename - AD/SID Verification" {
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'nonexistent' -VerboseOutput 2>&1
+            $result = & $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'nonexistent' -VerboseOutput -SkipElevationCheck 2>&1
 
             $result | Should -Match "Could not find new user"
             $LASTEXITCODE | Should -Be 11
@@ -141,7 +162,7 @@ Describe "Repair-FolderRedirectionAfterRename - AD/SID Verification" {
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'newuser' -SkipOldUserCheck -WhatIf -VerboseOutput 2>&1
+            $result = & $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'newuser' -SkipOldUserCheck -WhatIf -VerboseOutput -SkipElevationCheck 2>&1
 
             $result | Should -Match "Old user check skipped"
             $result | Should -Not -Match "Old user found"
@@ -206,6 +227,10 @@ Describe "Repair-FolderRedirectionAfterRename - ACL-Only Mode" {
         }
     }
 
+    BeforeEach {
+        Initialize-ADModuleMocks
+    }
+
     Context "ACL-Only mode with WhatIf (audit)" {
         It "Should display audit table and exit 0 without making changes" {
             Mock Get-ADUser {
@@ -217,7 +242,7 @@ Describe "Repair-FolderRedirectionAfterRename - ACL-Only Mode" {
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\test\share' -NewSam 'testuser' -AclOnly -WhatIf -VerboseOutput 2>&1
+            $result = & $script:ScriptPath -RootPath '\\test\share' -NewSam 'testuser' -AclOnly -WhatIf -VerboseOutput -SkipElevationCheck 2>&1
 
             # Should show ACL mode
             $result | Should -Match "ACL-Only Mode"
@@ -248,7 +273,7 @@ Describe "Repair-FolderRedirectionAfterRename - ACL-Only Mode" {
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\test\share' -NewSam 'testuser' -AclOnly -VerboseOutput 2>&1
+            $result = & $script:ScriptPath -RootPath '\\test\share' -NewSam 'testuser' -AclOnly -VerboseOutput -SkipElevationCheck 2>&1
 
             # Should show ACL mode
             $result | Should -Match "ACL-Only Mode"
@@ -274,7 +299,7 @@ Describe "Repair-FolderRedirectionAfterRename - ACL-Only Mode" {
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\test\share' -NewSam 'testuser' -AclOnly -VerboseOutput 2>&1
+            $result = & $script:ScriptPath -RootPath '\\test\share' -NewSam 'testuser' -AclOnly -VerboseOutput -SkipElevationCheck 2>&1
 
             # Should show all present
             $result | Should -Match "All required permissions already present"
@@ -295,7 +320,7 @@ Describe "Repair-FolderRedirectionAfterRename - ACL-Only Mode" {
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\test\share' -NewSam 'testuser' -AclOnly -VerboseOutput 2>&1
+            $result = & $script:ScriptPath -RootPath '\\test\share' -NewSam 'testuser' -AclOnly -VerboseOutput -SkipElevationCheck 2>&1
 
             $result | Should -Match "Target path not found"
             $LASTEXITCODE | Should -Be 20
@@ -305,13 +330,17 @@ Describe "Repair-FolderRedirectionAfterRename - ACL-Only Mode" {
 
 Describe "Repair-FolderRedirectionAfterRename - Exit Codes" {
 
+    BeforeEach {
+        Initialize-ADModuleMocks
+    }
+
     Context "SMB path unreachable" {
         It "Should exit with code 10" {
             Mock Test-Path { $false }
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\nonexistent\share' -OldSam 'old' -NewSam 'new' -SMBTimeoutSec 1 -VerboseOutput 2>&1
+            $result = & $script:ScriptPath -RootPath '\\nonexistent\share' -OldSam 'old' -NewSam 'new' -SMBTimeoutSec 1 -VerboseOutput -SkipElevationCheck 2>&1
 
             $result | Should -Match "SMB path unreachable"
             $LASTEXITCODE | Should -Be 10
@@ -338,7 +367,7 @@ Describe "Repair-FolderRedirectionAfterRename - Exit Codes" {
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'newuser' -VerboseOutput 2>&1
+            $result = & $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'newuser' -VerboseOutput -SkipElevationCheck 2>&1
 
             $result | Should -Match "Found.*open file"
             $result | Should -Match "Cannot proceed with open files"
@@ -348,6 +377,10 @@ Describe "Repair-FolderRedirectionAfterRename - Exit Codes" {
 }
 
 Describe "Repair-FolderRedirectionAfterRename - Integration" {
+
+    BeforeEach {
+        Initialize-ADModuleMocks
+    }
 
     Context "Full workflow with old user missing" {
         It "Should complete rename with warning about old user" {
@@ -368,7 +401,7 @@ Describe "Repair-FolderRedirectionAfterRename - Integration" {
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'newuser' -WhatIf -VerboseOutput 2>&1
+            $result = & $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'newuser' -WhatIf -VerboseOutput -SkipElevationCheck 2>&1
 
             # Should warn about old user
             $result | Should -Match "Old user.*not found"

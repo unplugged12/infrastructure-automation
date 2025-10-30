@@ -40,6 +40,9 @@
 .PARAMETER SkipOldUserCheck
     Skip old username AD lookup entirely (use new user SID only)
 
+.PARAMETER SkipElevationCheck
+    Skip the runtime administrator privilege check (intended for automated testing scenarios only)
+
 .EXAMPLE
     .\Repair-FolderRedirectionAfterRename.ps1 -RootPath \\yoda\Redir -OldSam miguelitoc -NewSam meguelitoc -WhatIf -VerboseOutput
 
@@ -89,10 +92,10 @@ param(
 
     [switch]$AclOnly,
 
-    [switch]$SkipOldUserCheck
-)
+    [switch]$SkipOldUserCheck,
 
-#Requires -RunAsAdministrator
+    [switch]$SkipElevationCheck
+)
 
 # Script-level variables
 $script:ExitCode = 0
@@ -129,6 +132,26 @@ function Write-Log {
     }
     catch {
         Write-Warning "Failed to write to log file: $_"
+    }
+}
+
+function Test-IsAdministrator {
+    try {
+        $identity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+        $principal = [System.Security.Principal.WindowsPrincipal]::new($identity)
+        return $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+    }
+    catch {
+        Write-Warning "Unable to determine administrator privileges: $_"
+        return $false
+    }
+}
+
+function Assert-Administrator {
+    if (-not (Test-IsAdministrator)) {
+        Write-Log "Administrator privileges are required to run this script." -Level ERROR
+        $script:ExitCode = 20
+        throw "Administrator privileges required"
     }
 }
 
@@ -527,6 +550,7 @@ try {
     Write-Log "SkipADCheck: $SkipADCheck" -Level INFO
     Write-Log "AclOnly: $AclOnly" -Level INFO
     Write-Log "SkipOldUserCheck: $SkipOldUserCheck" -Level INFO
+    Write-Log "SkipElevationCheck: $SkipElevationCheck" -Level INFO
 
     # Validate parameter combinations
     if ($AclOnly -and (-not $OldSam)) {
@@ -545,6 +569,13 @@ try {
         Write-Host "`nSUCCESS: Old and new usernames are identical. ExitCode=0`n" -ForegroundColor Green
         $script:ExitCode = 0
         exit 0
+    }
+
+    if ($SkipElevationCheck) {
+        Write-Log "Elevation check skipped per -SkipElevationCheck switch" -Level WARN
+    }
+    else {
+        Assert-Administrator
     }
 
     # Step 1: Connectivity check
