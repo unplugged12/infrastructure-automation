@@ -122,7 +122,7 @@ jobs:
           test -f CONTRIBUTING.md || (echo "CONTRIBUTING.md missing" && exit 1)
 
       - name: Validate Markdown
-        uses: DavidAnson/markdownlint-cli2-action@v20
+        uses: DavidAnson/markdownlint-cli2-action@v21
         with:
           globs: '**/*.md'
           config: .github/markdownlint-cli2.jsonc
