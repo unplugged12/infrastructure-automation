@@ -24,6 +24,7 @@ This project adheres to a code of conduct that all contributors are expected to 
 ### Prerequisites
 
 Before contributing, ensure you have:
+
 - **Git** installed and configured
 - **Docker Desktop** (or Docker Engine + Docker Compose)
 - **PowerShell 7+** (`pwsh`) for PowerShell scripts
@@ -35,11 +36,14 @@ Before contributing, ensure you have:
 
 1. Fork the repository on GitHub
 2. Clone your fork locally:
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/mcp-stacks.git
    cd mcp-stacks
    ```
+
 3. Add upstream remote:
+
    ```bash
    git remote add upstream https://github.com/unplugged12/mcp-stacks.git
    ```
@@ -47,6 +51,7 @@ Before contributing, ensure you have:
 ### Stay Synchronized
 
 Keep your fork up to date with upstream:
+
 ```bash
 git fetch upstream
 git checkout main
@@ -59,12 +64,14 @@ git push origin main
 ### Install Development Dependencies
 
 **PowerShell:**
+
 ```powershell
 # Install PSScriptAnalyzer for linting
 Install-Module -Name PSScriptAnalyzer -Scope CurrentUser
 ```
 
 **Shell Scripts:**
+
 ```bash
 # Install shellcheck (Linux/macOS)
 # Ubuntu/Debian:
@@ -80,6 +87,7 @@ scoop install shellcheck
 ### Validate Your Setup
 
 Run local checks before making changes:
+
 ```powershell
 # PowerShell validation
 pwsh ./tools/lint.ps1 -Mode Analyze
@@ -94,6 +102,7 @@ docker compose -f stacks/laptop/docker-compose.yml config
 ### Types of Contributions
 
 We welcome various types of contributions:
+
 - **Bug Fixes** - Fix issues reported in GitHub Issues
 - **Features** - Add new MCP servers or deployment capabilities
 - **Documentation** - Improve README, guides, or inline documentation
@@ -176,6 +185,7 @@ Run the analyzer after applying fixes to ensure the issue is resolved.
 ### Shellcheck Validation
 
 All shell scripts (`.sh`) must pass shellcheck:
+
 ```bash
 # Check a single script
 shellcheck scripts/install/install-agent.sh
@@ -198,6 +208,7 @@ find scripts/ -name "*.sh" -exec shellcheck {} +
 ### Validation
 
 Always validate compose files before committing:
+
 ```bash
 docker compose -f stacks/desktop/docker-compose.yml config
 ```
@@ -217,11 +228,13 @@ docker compose -f stacks/desktop/docker-compose.yml config
 ### Local Testing
 
 **Test Compose Syntax:**
+
 ```bash
 docker compose -f stacks/desktop/docker-compose.yml config
 ```
 
 **Test Stack Deployment (if you have Portainer):**
+
 ```bash
 # Deploy locally
 docker compose -f stacks/desktop/docker-compose.yml up -d
@@ -235,6 +248,7 @@ docker compose -f stacks/desktop/docker-compose.yml down
 ```
 
 **Test Scripts:**
+
 ```powershell
 # PowerShell script dry-run
 pwsh scripts/install/configure-agent-env.ps1 -WhatIf
@@ -246,6 +260,7 @@ bash -x scripts/install/install-agent.sh
 ### CI/CD Testing
 
 All pull requests automatically run:
+
 - PowerShell linting (PSScriptAnalyzer)
 - Shell script linting (shellcheck)
 - Docker Compose validation
@@ -283,7 +298,9 @@ Brief description of changes
 - Tested on: (OS, Docker version, Portainer version)
 - Test commands:
   ```
-  # Commands you ran to test
+
+# Commands you ran to test
+
   ```
 
 ## Screenshots (if applicable)
@@ -326,6 +343,7 @@ Add screenshots for UI changes or deployment results
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -336,6 +354,7 @@ Add screenshots for UI changes or deployment results
 - `ci`: CI/CD changes
 
 **Examples:**
+
 ```
 feat(stacks): add new mcp-postgres server
 
@@ -412,6 +431,7 @@ gitleaks detect --source . --verbose
 ### Recognition
 
 Contributors who submit quality PRs will be recognized in:
+
 - GitHub contributor graph
 - Release notes (for significant contributions)
 - README acknowledgments (for major features)

@@ -32,10 +32,28 @@ BeforeAll {
     }
 
     if (-not (Get-Command Get-ADUser -ErrorAction SilentlyContinue)) {
+        # The stub MUST declare -Identity (and the other params the script passes)
+        # so that Pester -ParameterFilter blocks referencing $Identity bind correctly.
+        # Without a real -Identity parameter, the argument lands in $args, $Identity is
+        # $null in the filter, no parameterized mock matches, and this throwing stub runs.
         function Get-ADUser {
+            param(
+                [string]$Identity,
+                [string[]]$Properties
+            )
             throw "Get-ADUser is not available in this environment. Tests must mock it."
         }
     }
+
+    # The script under test defines these helper functions internally and then
+    # invokes its main logic in the same run. Pester's Mock can only intercept a
+    # command that already resolves in the session at mock-definition time, so we
+    # declare matching stubs here. When the script is invoked via & $ScriptPath,
+    # Pester's mocks (keyed by command name) override the script's own definitions.
+    # These stubs are never executed when a test sets up a Mock for the same name.
+    function Get-ActualFolderName { param([string]$FolderName, [string]$RootPath) $FolderName }
+    function Get-FolderStats { param([string]$Path) @{ Exists = $false; FileCount = 0; SizeMB = 0 } }
+    function Test-OpenFiles { param([string]$Path) @() }
 
     function Initialize-ADModuleMocks {
         Mock Get-Module -ParameterFilter { $Name -eq 'ActiveDirectory' -and $ListAvailable } {
@@ -61,7 +79,7 @@ Describe "Repair-FolderRedirectionAfterRename - AD/SID Verification" {
                 throw "User not found"
             }
             Mock Get-ADUser -ParameterFilter { $Identity -eq 'newuser' } {
-                New-MockADUser -Sam 'newuser' -SID $script:MockNewSID
+                New-MockADUser -Sam 'newuser' -SID 'S-1-5-21-123456789-123456789-123456789-1001'
             }
             Mock Test-Path { $true }
             Mock Get-ActualFolderName { 'olduser' }
@@ -74,7 +92,7 @@ Describe "Repair-FolderRedirectionAfterRename - AD/SID Verification" {
             Mock Stop-Transcript { }
 
             # Should not throw and should exit 0
-            $result = & $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'newuser' -WhatIf -VerboseOutput -SkipElevationCheck 2>&1
+            $result = (& $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'newuser' -WhatIf -VerboseOutput -SkipElevationCheck *>&1) | Out-String
 
             # Check for warning about old user
             $result | Should -Match "Old user.*not found.*Assuming rename"
@@ -89,10 +107,10 @@ Describe "Repair-FolderRedirectionAfterRename - AD/SID Verification" {
     Context "Both users present with matching SIDs" {
         It "Should verify SIDs match and proceed normally" {
             Mock Get-ADUser -ParameterFilter { $Identity -eq 'olduser' } {
-                New-MockADUser -Sam 'olduser' -SID $script:MockOldSID
+                New-MockADUser -Sam 'olduser' -SID 'S-1-5-21-123456789-123456789-123456789-1001'
             }
             Mock Get-ADUser -ParameterFilter { $Identity -eq 'newuser' } {
-                New-MockADUser -Sam 'newuser' -SID $script:MockNewSID
+                New-MockADUser -Sam 'newuser' -SID 'S-1-5-21-123456789-123456789-123456789-1001'
             }
             Mock Test-Path { $true }
             Mock Get-ActualFolderName { 'olduser' }
@@ -104,7 +122,7 @@ Describe "Repair-FolderRedirectionAfterRename - AD/SID Verification" {
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'newuser' -WhatIf -VerboseOutput -SkipElevationCheck 2>&1
+            $result = (& $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'newuser' -WhatIf -VerboseOutput -SkipElevationCheck *>&1) | Out-String
 
             $result | Should -Match "SID verification passed"
             $LASTEXITCODE | Should -Be 0
@@ -114,16 +132,16 @@ Describe "Repair-FolderRedirectionAfterRename - AD/SID Verification" {
     Context "Both users present with DIFFERENT SIDs" {
         It "Should fail with ExitCode 12 (SID mismatch)" {
             Mock Get-ADUser -ParameterFilter { $Identity -eq 'user1' } {
-                New-MockADUser -Sam 'user1' -SID $script:MockOldSID
+                New-MockADUser -Sam 'user1' -SID 'S-1-5-21-123456789-123456789-123456789-1001'
             }
             Mock Get-ADUser -ParameterFilter { $Identity -eq 'user2' } {
-                New-MockADUser -Sam 'user2' -SID $script:MockDifferentSID
+                New-MockADUser -Sam 'user2' -SID 'S-1-5-21-123456789-123456789-123456789-9999'
             }
             Mock Test-Path { $true }
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\test\share' -OldSam 'user1' -NewSam 'user2' -VerboseOutput -SkipElevationCheck 2>&1
+            $result = (& $script:ScriptPath -RootPath '\\test\share' -OldSam 'user1' -NewSam 'user2' -VerboseOutput -SkipElevationCheck *>&1) | Out-String
 
             $result | Should -Match "SID MISMATCH"
             $result | Should -Match "not a simple rename"
@@ -140,7 +158,7 @@ Describe "Repair-FolderRedirectionAfterRename - AD/SID Verification" {
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'nonexistent' -VerboseOutput -SkipElevationCheck 2>&1
+            $result = (& $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'nonexistent' -VerboseOutput -SkipElevationCheck *>&1) | Out-String
 
             $result | Should -Match "Could not find new user"
             $LASTEXITCODE | Should -Be 11
@@ -150,7 +168,7 @@ Describe "Repair-FolderRedirectionAfterRename - AD/SID Verification" {
     Context "SkipOldUserCheck switch" {
         It "Should skip old user lookup and use new user SID only" {
             Mock Get-ADUser -ParameterFilter { $Identity -eq 'newuser' } {
-                New-MockADUser -Sam 'newuser' -SID $script:MockNewSID
+                New-MockADUser -Sam 'newuser' -SID 'S-1-5-21-123456789-123456789-123456789-1001'
             }
             Mock Test-Path { $true }
             Mock Get-ActualFolderName { 'olduser' }
@@ -162,7 +180,7 @@ Describe "Repair-FolderRedirectionAfterRename - AD/SID Verification" {
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'newuser' -SkipOldUserCheck -WhatIf -VerboseOutput -SkipElevationCheck 2>&1
+            $result = (& $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'newuser' -SkipOldUserCheck -WhatIf -VerboseOutput -SkipElevationCheck *>&1) | Out-String
 
             $result | Should -Match "Old user check skipped"
             $result | Should -Not -Match "Old user found"
@@ -174,55 +192,55 @@ Describe "Repair-FolderRedirectionAfterRename - AD/SID Verification" {
 Describe "Repair-FolderRedirectionAfterRename - ACL-Only Mode" {
 
     BeforeAll {
-        # Mock ACL with missing user permission
-        $script:MockAclMissingUser = [PSCustomObject]@{
-            Access = @(
-                [PSCustomObject]@{
-                    IdentityReference = [PSCustomObject]@{
-                        Value = 'NT AUTHORITY\SYSTEM'
-                    }
-                    FileSystemRights = 'FullControl'
-                    IsInherited = $false
-                    AccessControlType = 'Allow'
-                },
-                [PSCustomObject]@{
-                    IdentityReference = [PSCustomObject]@{
-                        Value = 'BUILTIN\Administrators'
-                    }
-                    FileSystemRights = 'FullControl'
-                    IsInherited = $false
-                    AccessControlType = 'Allow'
-                }
+        # ACL fixtures are exposed as functions (not $script: variables) because a
+        # mock body that runs while the script-under-test is executing resolves
+        # $script: against the SCRIPT's scope, not this test file's — so a
+        # $script:MockAcl* reference would come back $null. Functions resolve by
+        # name from any scope, so the Get-Acl mocks call these instead.
+        #
+        # The fixtures faithfully emulate the System.Security.AccessControl shape
+        # the script actually uses:
+        #   - $ace.IdentityReference.Translate([SecurityIdentifier]).Value  (line ~720)
+        #   - $acl.AddAccessRule($rule)                                     (line ~769)
+        # so the non-WhatIf repair path can run against the mock.
+        function New-MockAce {
+            param([string]$IdentitySid, [string]$Rights)
+            $idRef = [PSCustomObject]@{ Value = $IdentitySid }
+            # Translate() just returns an object exposing .Value = the SID string.
+            $idRef | Add-Member -MemberType ScriptMethod -Name Translate -Value {
+                param($type) [PSCustomObject]@{ Value = $this.Value }
+            }
+            [PSCustomObject]@{
+                IdentityReference = $idRef
+                FileSystemRights  = $Rights
+                IsInherited       = $false
+                AccessControlType = 'Allow'
+            }
+        }
+
+        function New-MockAcl {
+            param([object[]]$Aces)
+            $acl = [PSCustomObject]@{ Access = @($Aces) }
+            # The script mutates the ACL via AddAccessRule before Set-Acl; provide
+            # a no-op so the repair path completes without a real DirectorySecurity.
+            $acl | Add-Member -MemberType ScriptMethod -Name AddAccessRule -Value { param($rule) }
+            $acl
+        }
+
+        # SYSTEM (S-1-5-18) and Administrators (S-1-5-32-544) present; user ACE absent.
+        function New-MockAclMissingUser {
+            New-MockAcl -Aces @(
+                (New-MockAce -IdentitySid 'S-1-5-18'      -Rights 'FullControl'),
+                (New-MockAce -IdentitySid 'S-1-5-32-544'  -Rights 'FullControl')
             )
         }
 
-        # Mock ACL with all required permissions
-        $script:MockAclComplete = [PSCustomObject]@{
-            Access = @(
-                [PSCustomObject]@{
-                    IdentityReference = [PSCustomObject]@{
-                        Value = 'S-1-5-21-123456789-123456789-123456789-1001'
-                    }
-                    FileSystemRights = 'Modify'
-                    IsInherited = $false
-                    AccessControlType = 'Allow'
-                },
-                [PSCustomObject]@{
-                    IdentityReference = [PSCustomObject]@{
-                        Value = 'NT AUTHORITY\SYSTEM'
-                    }
-                    FileSystemRights = 'FullControl'
-                    IsInherited = $false
-                    AccessControlType = 'Allow'
-                },
-                [PSCustomObject]@{
-                    IdentityReference = [PSCustomObject]@{
-                        Value = 'BUILTIN\Administrators'
-                    }
-                    FileSystemRights = 'FullControl'
-                    IsInherited = $false
-                    AccessControlType = 'Allow'
-                }
+        # User (Modify), SYSTEM and Administrators (FullControl) all present.
+        function New-MockAclComplete {
+            New-MockAcl -Aces @(
+                (New-MockAce -IdentitySid 'S-1-5-21-123456789-123456789-123456789-1001' -Rights 'Modify'),
+                (New-MockAce -IdentitySid 'S-1-5-18'     -Rights 'FullControl'),
+                (New-MockAce -IdentitySid 'S-1-5-32-544' -Rights 'FullControl')
             )
         }
     }
@@ -234,15 +252,15 @@ Describe "Repair-FolderRedirectionAfterRename - ACL-Only Mode" {
     Context "ACL-Only mode with WhatIf (audit)" {
         It "Should display audit table and exit 0 without making changes" {
             Mock Get-ADUser {
-                New-MockADUser -Sam 'testuser' -SID $script:MockNewSID
+                New-MockADUser -Sam 'testuser' -SID 'S-1-5-21-123456789-123456789-123456789-1001'
             }
             Mock Test-Path { $true }
-            Mock Get-Acl { $script:MockAclMissingUser }
+            Mock Get-Acl { New-MockAclMissingUser }
             Mock Set-Acl { }
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\test\share' -NewSam 'testuser' -AclOnly -WhatIf -VerboseOutput -SkipElevationCheck 2>&1
+            $result = (& $script:ScriptPath -RootPath '\\test\share' -NewSam 'testuser' -AclOnly -WhatIf -VerboseOutput -SkipElevationCheck *>&1) | Out-String
 
             # Should show ACL mode
             $result | Should -Match "ACL-Only Mode"
@@ -263,17 +281,15 @@ Describe "Repair-FolderRedirectionAfterRename - ACL-Only Mode" {
     Context "ACL-Only mode without WhatIf (repair)" {
         It "Should add missing ACEs and exit 0" {
             Mock Get-ADUser {
-                New-MockADUser -Sam 'testuser' -SID $script:MockNewSID
+                New-MockADUser -Sam 'testuser' -SID 'S-1-5-21-123456789-123456789-123456789-1001'
             }
             Mock Test-Path { $true }
-            Mock Get-Acl { $script:MockAclMissingUser }
-
-            $setAclCalled = $false
-            Mock Set-Acl { $setAclCalled = $true }
+            Mock Get-Acl { New-MockAclMissingUser }
+            Mock Set-Acl { }
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\test\share' -NewSam 'testuser' -AclOnly -VerboseOutput -SkipElevationCheck 2>&1
+            $result = (& $script:ScriptPath -RootPath '\\test\share' -NewSam 'testuser' -AclOnly -VerboseOutput -SkipElevationCheck *>&1) | Out-String
 
             # Should show ACL mode
             $result | Should -Match "ACL-Only Mode"
@@ -281,8 +297,9 @@ Describe "Repair-FolderRedirectionAfterRename - ACL-Only Mode" {
             # Should indicate permissions were added
             $result | Should -Match "Added.*for"
 
-            # Should call Set-Acl to apply changes
-            $setAclCalled | Should -Be $true
+            # Should call Set-Acl to apply changes (assert via Pester, not a
+            # closure variable — a Mock body cannot mutate the It-scope variable).
+            Assert-MockCalled Set-Acl -Times 1 -Exactly
 
             $LASTEXITCODE | Should -Be 0
         }
@@ -291,15 +308,15 @@ Describe "Repair-FolderRedirectionAfterRename - ACL-Only Mode" {
     Context "ACL-Only mode - Idempotency check" {
         It "Should report no changes needed when all ACEs present" {
             Mock Get-ADUser {
-                New-MockADUser -Sam 'testuser' -SID $script:MockNewSID
+                New-MockADUser -Sam 'testuser' -SID 'S-1-5-21-123456789-123456789-123456789-1001'
             }
             Mock Test-Path { $true }
-            Mock Get-Acl { $script:MockAclComplete }
+            Mock Get-Acl { New-MockAclComplete }
             Mock Set-Acl { }
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\test\share' -NewSam 'testuser' -AclOnly -VerboseOutput -SkipElevationCheck 2>&1
+            $result = (& $script:ScriptPath -RootPath '\\test\share' -NewSam 'testuser' -AclOnly -VerboseOutput -SkipElevationCheck *>&1) | Out-String
 
             # Should show all present
             $result | Should -Match "All required permissions already present"
@@ -314,13 +331,16 @@ Describe "Repair-FolderRedirectionAfterRename - ACL-Only Mode" {
     Context "ACL-Only mode - Target path missing" {
         It "Should fail with ExitCode 20" {
             Mock Get-ADUser {
-                New-MockADUser -Sam 'testuser' -SID $script:MockNewSID
+                New-MockADUser -Sam 'testuser' -SID 'S-1-5-21-123456789-123456789-123456789-1001'
             }
-            Mock Test-Path { $false }
+            # Share root reachable (Step 1 SMB check passes) but the per-user
+            # target folder is missing, so ACL-only mode fails with ExitCode 20.
+            Mock Test-Path -ParameterFilter { $LiteralPath -like '*testuser*' -or $Path -like '*testuser*' } { $false }
+            Mock Test-Path { $true }
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\test\share' -NewSam 'testuser' -AclOnly -VerboseOutput -SkipElevationCheck 2>&1
+            $result = (& $script:ScriptPath -RootPath '\\test\share' -NewSam 'testuser' -AclOnly -VerboseOutput -SkipElevationCheck *>&1) | Out-String
 
             $result | Should -Match "Target path not found"
             $LASTEXITCODE | Should -Be 20
@@ -340,7 +360,7 @@ Describe "Repair-FolderRedirectionAfterRename - Exit Codes" {
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\nonexistent\share' -OldSam 'old' -NewSam 'new' -SMBTimeoutSec 1 -VerboseOutput -SkipElevationCheck 2>&1
+            $result = (& $script:ScriptPath -RootPath '\\nonexistent\share' -OldSam 'old' -NewSam 'new' -SMBTimeoutSec 1 -VerboseOutput -SkipElevationCheck *>&1) | Out-String
 
             $result | Should -Match "SMB path unreachable"
             $LASTEXITCODE | Should -Be 10
@@ -350,7 +370,7 @@ Describe "Repair-FolderRedirectionAfterRename - Exit Codes" {
     Context "Open files detected" {
         It "Should exit with code 13 when not in WhatIf mode" {
             Mock Get-ADUser {
-                New-MockADUser -Sam 'testuser' -SID $script:MockNewSID
+                New-MockADUser -Sam 'testuser' -SID 'S-1-5-21-123456789-123456789-123456789-1001'
             }
             Mock Test-Path { $true }
             Mock Get-ActualFolderName { 'olduser' }
@@ -367,7 +387,7 @@ Describe "Repair-FolderRedirectionAfterRename - Exit Codes" {
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'newuser' -VerboseOutput -SkipElevationCheck 2>&1
+            $result = (& $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'newuser' -VerboseOutput -SkipElevationCheck *>&1) | Out-String
 
             $result | Should -Match "Found.*open file"
             $result | Should -Match "Cannot proceed with open files"
@@ -388,7 +408,7 @@ Describe "Repair-FolderRedirectionAfterRename - Integration" {
                 throw "User not found"
             }
             Mock Get-ADUser -ParameterFilter { $Identity -eq 'newuser' } {
-                New-MockADUser -Sam 'newuser' -SID $script:MockNewSID
+                New-MockADUser -Sam 'newuser' -SID 'S-1-5-21-123456789-123456789-123456789-1001'
             }
             Mock Test-Path { $true }
             Mock Get-ActualFolderName -ParameterFilter { $FolderName -eq 'olduser' } { 'olduser' }
@@ -401,7 +421,7 @@ Describe "Repair-FolderRedirectionAfterRename - Integration" {
             Mock Start-Transcript { }
             Mock Stop-Transcript { }
 
-            $result = & $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'newuser' -WhatIf -VerboseOutput -SkipElevationCheck 2>&1
+            $result = (& $script:ScriptPath -RootPath '\\test\share' -OldSam 'olduser' -NewSam 'newuser' -WhatIf -VerboseOutput -SkipElevationCheck *>&1) | Out-String
 
             # Should warn about old user
             $result | Should -Match "Old user.*not found"

@@ -838,6 +838,10 @@ try {
         $openNew = Test-OpenFiles -Path $newPath
     }
 
+    # Normalize to arrays so a single returned handle (scalar) does not break
+    # .Count or the array concatenation below (PSCustomObject has no op_Addition).
+    $openOld = @($openOld)
+    $openNew = @($openNew)
     $totalOpen = $openOld.Count + $openNew.Count
 
     if ($totalOpen -gt 0) {
