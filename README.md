@@ -83,16 +83,19 @@ infrastructure-automation/
 ### Prerequisites
 
 **For PowerShell Scripts:**
+
 - PowerShell 5.1+ (Windows) or PowerShell 7+ (cross-platform)
 - Active Directory PowerShell module (for AD operations)
 - Appropriate permissions (varies by script)
 
 **For Bash Scripts:**
+
 - Bash 4.0+
 - Root or sudo access (for system-level operations)
 - Ubuntu/Debian-based system (scripts are tailored for Ubuntu 24.04)
 
 **For SQL Scripts:**
+
 - SQL Server 2016+ (compatible with 2008R2+)
 - VIEW SERVER STATE permission (for monitoring)
 - CONTROL SERVER permission (for failover operations)
@@ -100,12 +103,14 @@ infrastructure-automation/
 ### Installation
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/unplugged12/infrastructure-automation.git
    cd infrastructure-automation
    ```
 
 2. **Review scripts before execution:**
+
    ```powershell
    # PowerShell: View script help
    Get-Help .\powershell\user-management\New-UserOnboarding.ps1 -Detailed
@@ -119,6 +124,7 @@ infrastructure-automation/
 ### Example Usage
 
 **PowerShell - User Onboarding:**
+
 ```powershell
 # Review the script first
 Get-Help .\powershell\user-management\New-UserOnboarding.ps1 -Full
@@ -131,6 +137,7 @@ Get-Help .\powershell\user-management\New-UserOnboarding.ps1 -Full
 ```
 
 **Bash - Ubuntu Hardening:**
+
 ```bash
 # Make executable
 chmod +x bash/security/harden_ubuntu24.sh
@@ -143,6 +150,7 @@ sudo ./bash/security/harden_ubuntu24.sh
 ```
 
 **SQL - Availability Group Monitoring:**
+
 ```sql
 -- Open in SQL Server Management Studio
 -- Run against primary replica
@@ -163,18 +171,21 @@ sudo ./bash/security/harden_ubuntu24.sh
 ### Platform Expertise
 
 **Windows/Active Directory:**
+
 - User lifecycle automation (onboarding, offboarding, modification)
 - Group Policy and security baseline enforcement
 - Certificate management and PKI operations
 - PowerShell DSC and advanced scripting
 
 **Linux:**
+
 - Security hardening (UFW firewall, fail2ban, AppArmor)
 - CIS benchmark automation for Ubuntu
 - Service monitoring and health checks
 - Bash scripting with error handling
 
 **SQL Server:**
+
 - Always On Availability Group operations
 - Automated failover procedures
 - Health monitoring and alerting
@@ -194,6 +205,7 @@ sudo ./bash/security/harden_ubuntu24.sh
 ### Script Documentation
 
 All scripts include comprehensive inline documentation:
+
 - **Synopsis** - Brief description of purpose
 - **Description** - Detailed functionality explanation
 - **Parameters** - Input parameter documentation
@@ -218,6 +230,7 @@ All scripts include comprehensive inline documentation:
 Scripts are categorized by operational risk:
 
 ### 🔴 High Risk - Requires Approval
+
 - User onboarding/offboarding scripts
 - Password hash extraction utilities
 - System hardening with external dependencies
@@ -226,6 +239,7 @@ Scripts are categorized by operational risk:
 **Guidelines:** Test in lab environment, require peer review, document changes
 
 ### 🟡 Medium Risk - Requires Testing
+
 - File deletion/cleanup operations
 - Permission modifications
 - Firewall configuration changes
@@ -234,6 +248,7 @@ Scripts are categorized by operational risk:
 **Guidelines:** Test with `-WhatIf` flag, verify backup exists, review logs
 
 ### ✅ Low Risk - Safe for Production
+
 - Monitoring and reporting scripts
 - Read-only information gathering
 - Health check queries
@@ -277,6 +292,7 @@ bash -x script.sh
 ### Required Dependencies
 
 **PowerShell Modules:**
+
 ```powershell
 # Install required modules
 Install-Module ActiveDirectory -Force
@@ -284,6 +300,7 @@ Install-Module Microsoft.Graph -Force
 ```
 
 **Linux Packages:**
+
 ```bash
 # Ubuntu/Debian
 sudo apt install ufw fail2ban apparmor-utils
@@ -317,16 +334,19 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🎯 Use Cases
 
 ### For System Administrators
+
 - Ready-to-use automation for common tasks
 - Best practices for security hardening
 - Templates for creating custom automation
 
 ### For IT Leaders
+
 - Demonstration of automation capabilities
 - Examples of infrastructure as code
 - Security and compliance automation patterns
 
 ### For DevOps Engineers
+
 - Cross-platform scripting examples
 - CI/CD integration patterns
 - Infrastructure automation templates
@@ -336,6 +356,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support & Questions
 
 For questions, issues, or feature requests:
+
 - **Issues:** [GitHub Issues](https://github.com/unplugged12/infrastructure-automation/issues)
 - **Discussions:** [GitHub Discussions](https://github.com/unplugged12/infrastructure-automation/discussions)
 

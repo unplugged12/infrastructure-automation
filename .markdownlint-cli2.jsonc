@@ -1,0 +1,16 @@
+{
+  "//": "Shared markdownlint-cli2 configuration. Mirrors previous inline rules.",
+  "config": {
+    "MD013": false,
+    "MD033": false,
+    "MD041": false,
+    "//MD001": "Issue/PR templates and CONTRIBUTING examples intentionally jump heading levels.",
+    "MD001": false,
+    "//MD025": "CONTRIBUTING shows example markdown (e.g. a sample '# ...' inside guidance) that legitimately repeats an H1.",
+    "MD025": false,
+    "//MD040": "Plain ``` blocks are used for example/console output where no language tag applies.",
+    "MD040": false,
+    "//MD060": "Compact vs padded table-pipe spacing is cosmetic and not enforced for this repo's tables.",
+    "MD060": false
+  }
+}

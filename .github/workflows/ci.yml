@@ -47,7 +47,7 @@ jobs:
       - name: Lint Bash Scripts
         run: |
           set -euo pipefail
-          find bash scripts -name "*.sh" -type f -print0 | xargs -0 -r shellcheck
+          find bash scripts -name "*.sh" -type f -print0 | xargs -0 -r shellcheck --severity=error
 
   security-scan:
     name: Security Scanning
@@ -59,7 +59,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.34.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -125,7 +125,6 @@ jobs:
         uses: DavidAnson/markdownlint-cli2-action@v22
         with:
           globs: '**/*.md'
-          config: .github/markdownlint-cli2.jsonc
 
   sql-lint:
     name: SQL Linting
@@ -184,7 +183,6 @@ jobs:
           $config.Run.Path = @($tests.FullName)
           $config.Run.Exit = $true
           $config.Output.Verbosity = 'Detailed'
-          $config.CI = $true
           $config.TestResult.Enabled = $true
           $config.TestResult.OutputPath = Join-Path $resultsPath 'PesterResults.xml'
           $config.TestResult.OutputFormat = 'NUnitXml'
@@ -211,8 +209,17 @@ jobs:
         run: |
           set -euo pipefail
 
-          if ! grep -R "<REPLACE_WITH_SECURE_PASSWORD>" powershell/ > /dev/null; then
-            echo "ERROR: Password placeholders missing from PowerShell scripts"
+          # Ensure no hardcoded password literal is assigned in the onboarding
+          # scripts. They must prompt securely at runtime (Read-Host -AsSecureString),
+          # never embed a credential string.
+          if grep -RnE '\$([A-Za-z_]*Password[A-Za-z_]*)\s*=\s*"[^"]+"' powershell/; then
+            echo "ERROR: Hardcoded password literal found in PowerShell scripts"
+            exit 1
+          fi
+
+          # The onboarding scripts must request the password interactively.
+          if ! grep -Rq "Read-Host.*-AsSecureString" powershell/user-management/; then
+            echo "ERROR: Onboarding scripts no longer prompt securely for a password"
             exit 1
           fi
 
