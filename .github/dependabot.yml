@@ -1,9 +1,13 @@
 version: 2
 updates:
+  # Monthly and grouped: one pull request for all the actions.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
+    groups:
+      actions:
+        patterns: ["*"]
     commit-message:
       prefix: "chore"
       include: "scope"
@@ -11,7 +15,7 @@ updates:
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     commit-message:
       prefix: "chore"
       include: "scope"
